@@ -1,64 +1,94 @@
-#From MQTT Building
+import numpy as np
+import datetime
 
-E_grid=-25
+# Inputs
+E_grid = -10
+E_plug = [1, 1, 4, 1]  # Plugs 1 through 4
+SoC = [0] * 10         # SoC 1 through 10
 
-#From MQTT Charging Station
+# Algorithm
+E_plugs = sum(E_plug)
+E_build = max(0, E_grid - E_plugs)
+E_ex, E_imp = max(0, -E_grid), max(0, E_grid)
 
-E_plug_1=1
-E_plug_2=1
-E_plug_3=4
-E_plug_4=1
+# Algorithm for export
+def distribute_energy(E_plug, E_ex):
+    limit, threshold = 11, 0.01
+    total_plugs = len(E_plug)
+
+    while E_ex > threshold:
+        equal_share = E_ex / total_plugs
+        for i in range(total_plugs):
+            if E_plug[i] < limit:
+                energy_to_add = min(equal_share, limit - E_plug[i])
+                E_plug[i] += energy_to_add
+                E_ex -= energy_to_add
+
+        if E_ex <= threshold or all(e >= limit for e in E_plug):
+            break
+
+    return [round(e, 2) for e in E_plug]
 
 
-"Algorithm"
+# Example usage
+Plug_capacity = 44 - E_plugs
+E_plugs_ex = distribute_energy(E_plug, min(E_ex, Plug_capacity))
 
-E_plugs=E_plug_1 + E_plug_2 + E_plug_3 + E_plug_4
+if E_plugs_ex != E_plug:
+    print(f'To Reduce Export {tuple(E_plugs_ex)}')
 
-if E_grid > 0:
-    E_build = E_grid - E_plugs
-else:
-    E_build=0
+# Verify maximum vehicle capacities
+Caps = [22] * 10
+Caps_np = np.array(Caps)
+SoCs_in_np = np.array(SoC)
+Caps_ev = Caps_np * (100 - SoCs_in_np) / 100
 
-if E_grid<0:
-    E_ex=-E_grid
-    E_imp=0
-else:
-    E_ex=0
-    E_imp=E_grid 
-    
-def distribuisci_energia(E_plug_1, E_plug_2, E_plug_3, E_plug_4, E_ex):
-    E_plug = [E_plug_1, E_plug_2, E_plug_3, E_plug_4]
-    limite = 11
-    soglia = 0.01  # Soglia per evitare il ciclo infinito
+# Algorithm for import
+def reduce_energy(E_plug, E_ex):
+    if E_imp == 0:
+        return E_plug  # Return the original values if there is no energy to import.
 
-    # Distribuisci E_ex in parti uguali inizialmente
-    quota_iniziale = E_ex / 4
-    for i in range(4):
-        E_plug[i] += min(quota_iniziale, limite - E_plug[i])
-        E_ex -= min(quota_iniziale, limite - E_plug[i])
+    threshold = 0.01
+    possible_reduction = sum(E_plug)
+    E_ex = min(E_ex, possible_reduction)
 
-    # Se rimane ancora energia in E_ex, distribuiscila tra le E_plug che non hanno raggiunto il limite
-    while E_ex > soglia and j<100:
-        for i in range(4):
-            if E_plug[i] < limite:
-                energia_da_aggiungere = min(E_ex, limite - E_plug[i])
-                E_plug[i] += energia_da_aggiungere
-                E_ex -= energia_da_aggiungere
+    while E_ex > threshold:
+        total_reduction = sum(e for e in E_plug if e > threshold)
+        if total_reduction == 0:
+            break
 
-                if E_ex <= soglia:
+        for i, e in enumerate(E_plug):
+            if e > threshold:
+                proportional_reduction = (e / total_reduction) * E_ex
+                actual_reduction = min(proportional_reduction, e)
+                E_plug[i] -= actual_reduction
+                E_ex -= actual_reduction
+                if E_ex <= threshold:
                     break
 
-    # Arrotonda i valori finali per evitare numeri con troppe cifre decimali
-    E_plug = [round(e, 2) for e in E_plug]
+    return [round(e, 2) for e in E_plug]
 
-    return E_plug
+E_plugs_imp = reduce_energy(E_plug, min(E_imp, E_plugs))
 
-# Esempio di utilizzo
+if E_plugs_imp != E_plug:
+    print(f'To Reduce Import {tuple(E_plugs_imp)}')
 
-Plug_capacity=44-E_plugs
+# Output
+print('Plugs', E_plugs)
+print('Grid', E_grid)
+print('NewPlugs_ex', sum(E_plugs_ex))
+print('Reduction_ex', E_plugs - sum(E_plugs_ex))
+print('NewPlugs_imp', sum(E_plugs_imp))
+print('Reduction_imp', E_plugs - sum(E_plugs_imp))
 
-E_ex=min(E_ex,Plug_capacity)
+# Algorithm for setpoint
+current_date = datetime.datetime.now()
+current_month = current_date.month
 
-E_plug_1_new, E_plug_2_new, E_plug_3_new, E_plug_4_new = distribuisci_energia(E_plug_1, E_plug_2, E_plug_3, E_plug_4, E_ex)
+if -E_grid - Plug_capacity > 0:
+    setpoint_adjustment = "Reduce" if 3 <= current_month <= 10 else "Increase"
+    print(f"{setpoint_adjustment} the HP Setpoint by 1°C")
 
-print(E_plug_1_new, E_plug_2_new, E_plug_3_new, E_plug_4_new)
+if E_grid - E_plugs > 0:
+    setpoint_adjustment = "Increase" if 3 <= current_month <= 10 else "Reduce"
+    print(f"{setpoint_adjustment} the HP Setpoint by 1°C")
