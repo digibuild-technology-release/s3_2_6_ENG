@@ -2,6 +2,7 @@ import logging
 import json
 import time
 import datetime
+import requests
 
 import numpy as np
 
@@ -120,7 +121,14 @@ def dss(user_data: Variables):
     }
     
     return solution
-      
+
+
+@app.get("/test_connection")
+def test_connection():
+    
+    return {"API": "Connected"}
+
+
 if __name__ == "__main__":
     
     import uvicorn
