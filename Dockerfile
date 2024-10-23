@@ -10,7 +10,7 @@ COPY . /app/
 RUN python -m pip install --upgrade pip 
 RUN python -m pip install -r requirements.txt
 
-EXPOSE 8090
+EXPOSE 8091
 
 # Run app.py when the container launches
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8090"]
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8091"]

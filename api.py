@@ -132,6 +132,6 @@ def test_connection():
 if __name__ == "__main__":
     
     import uvicorn
-    uvicorn.run("api:app", host="0.0.0.0", port=8090, reload=True)
+    uvicorn.run("api:app", host="0.0.0.0", port=8091, reload=True)
     
     
