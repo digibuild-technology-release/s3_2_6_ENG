@@ -20,7 +20,7 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -f docker/Dockerfile . -t digibuild.azurecr.io/emot/dss-api:latest
+        docker build -f Dockerfile . -t digibuild.azurecr.io/emot/dss-api:latest
 
     - name: Push Docker image to ACR
       run: |
