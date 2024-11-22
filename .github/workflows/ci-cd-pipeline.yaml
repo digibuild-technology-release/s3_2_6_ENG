@@ -1,0 +1,27 @@
+name: Python Project Build with Docker Build and Push
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Login to Azure Container Registry
+      run: |
+        echo "${{ secrets.ACR_PASSWORD }}" | docker login digibuild.azurecr.io -u "${{ secrets.ACR_USERNAME }}" --password-stdin
+
+    - name: Build Docker image
+      run: |
+        docker build -f docker/Dockerfile . -t digibuild.azurecr.io/emot/dss-api:latest
+
+    - name: Push Docker image to ACR
+      run: |
+        docker push digibuild.azurecr.io/emot/dss-api:latest
