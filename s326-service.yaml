@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: fast-api-service
+  name: dss-api
 spec:
   selector:
-    app: fast-api
+    app: dss-api
   ports:
   - port: 8000
     targetPort: 8000
