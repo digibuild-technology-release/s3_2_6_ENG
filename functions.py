@@ -2,28 +2,28 @@ import datetime
 
 
 def decision_support_system(autopilot, e_grid, plug_capacity, e_plugs):
-    message = ""
     current_date = datetime.datetime.now()
     current_month = current_date.month
 
     if -e_grid - plug_capacity > 0 and autopilot == 1:
-        setpoint_adjustment = "Reduce" if 3 <= current_month <= 10 else "Increase"
-        message = f"{setpoint_adjustment} the HP Setpoint by 1°C"
+        setpoint_adjustment = "reduce" if 3 <= current_month <= 10 else "increase"
+        message = f"Please {setpoint_adjustment} the Heat Pump setpoint by 1°C or connect additional vehicles."
 
     elif e_grid - e_plugs > 0 and autopilot == 1:
-        setpoint_adjustment = "Increase" if 3 <= current_month <= 10 else "Reduce"
-        message = f"{setpoint_adjustment} the HP Setpoint by 1°C "
+        setpoint_adjustment = "increase" if 3 <= current_month <= 10 else "reduce"
+        message = (f"Please {setpoint_adjustment} the Heat Pump setpoint by 1°C or disconnect currently "
+                   f"charged vehicles.")
 
     elif -e_grid - plug_capacity > 0 and autopilot == 0:
-        setpoint_adjustment = "Reduce" if 3 <= current_month <= 10 else "Increase"
-        message = f"{setpoint_adjustment} the HP Setpoint by 1°C or Enable Autopilot"
+        setpoint_adjustment = "reduce" if 3 <= current_month <= 10 else "increase"
+        message = f"Please {setpoint_adjustment} the Heat Pump setpoint by 1°C or Enable Autopilot"
 
     elif e_grid - e_plugs > 0 and autopilot == 0:
-        setpoint_adjustment = "Increase" if 3 <= current_month <= 10 else "Reduce"
-        message = f"{setpoint_adjustment} the HP Setpoint by 1°C or Enable Autopilot"
+        setpoint_adjustment = "increase" if 3 <= current_month <= 10 else "reduce"
+        message = f"Please {setpoint_adjustment} the Heat Pump setpoint by 1°C or Enable Autopilot"
 
     else:
-        setpoint_adjustment = "No Setpoint Adjustment"
+        setpoint_adjustment = "No setpoint Adjustment"
         message = f"{setpoint_adjustment}"
 
     return message

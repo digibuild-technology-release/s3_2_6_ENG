@@ -20,7 +20,6 @@ app = FastAPI()
 class Variables(BaseModel):
     gridPower: int
     plugPowers: list
-    vehicleSoCs: list
     autopilot: int
 
 
@@ -29,13 +28,11 @@ async def check_input(user_data: Variables):
     autopilot = user_data.autopilot
     grid_power = user_data.gridPower
     cs_plug_powers = user_data.plugPowers
-    vehicle_socs = user_data.vehicleSoCs
 
     return {
         "autopilot": autopilot,
         "grid_power": grid_power,
         "cs_plug_powers": cs_plug_powers,
-        "vehicle_socs": vehicle_socs
     }
 
 
@@ -52,21 +49,25 @@ def dss(user_data: Variables):
                                       plug_capacity=plugs_capacity, e_plugs=e_plugs)
 
     if e_plugs_ex != user_data.plugPowers:
-        advice = f"To Reduce Export {tuple(e_plugs_ex)}"
+        advice = f"Charging power to be reduced:"
+        advice_plugs = tuple(e_plugs_ex)
     elif e_plugs_imp != user_data.plugPowers:
-        advice = f'To Reduce Import {tuple(e_plugs_imp)}'
+        advice = f'Charging power to be increased:'
+        advice_plugs = tuple(e_plugs_imp)
     else:
         advice = f"No Advice"
+        advice_plugs = None
 
     solution = {
         'plugs': e_plugs,
         'grid': user_data.gridPower,
-        'NewPlugs_ex': sum(e_plugs_ex),
-        'Reduction_ex': e_plugs - sum(e_plugs_ex),
-        'NewPlugs_imp': sum(e_plugs_imp),
-        'reduction_imp': e_plugs - sum(e_plugs_imp),
+        'NewPlugsEx': sum(e_plugs_ex),
+        'ReductionEx': e_plugs - sum(e_plugs_ex),
+        'NewPlugsImp': sum(e_plugs_imp),
+        'reductionImp': e_plugs - sum(e_plugs_imp),
         'advice': advice,
-        'setpoint_adjustment': message
+        'advicePlugs': advice_plugs,
+        'setPointAdjustment': message
     }
 
     return solution
